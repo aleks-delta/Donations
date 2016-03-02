@@ -4,8 +4,7 @@ function loadDonations() {
 	
 	console.log ('UserName | Project | Cost');
 	var appsArr = JSON.parse(apps);
-	if (appsArr != null) 
-	{
+	if (appsArr != null) {
 		for (line of appsArr) {
 			var newRow = formApplicationTableRow(line.projectName, line.cost, line.userName);
 			$('#projectTable > tbody:last').append(newRow);
@@ -21,25 +20,21 @@ function whoDonatedToProject(projectName)
 {
 	var donationsString = localStorage.getItem("donations");
 	donations = JSON.parse(donationsString);
-	if (donations != null) 
-	{
+	if (donations != null) {
 		var donationsForProject = donations[projectName];
-		if (donationsForProject == undefined)
-		{
+		if (donationsForProject == undefined) {
 			alert("There are no donations for project '"+projectName+"'");
 		}
 		else {
 			var donationsForProject = donations[projectName];
 			var result = "Donations for project "+projectName+":\n";
-			for (dons of donationsForProject)
-			{
+			for (dons of donationsForProject) {
 				result+=dons.userName+': $'+dons.amount+'\n';
 			}
 			alert(result);
 		}
 	}
-	else
-	{
+	else {
 		alert ("There's nothing in the donations database");
 	}
 }
@@ -65,22 +60,18 @@ function donateToProject(projectName, donatePopup) {
 	$(donatePopup).find('#SubmitButton').on('click', function() {
 		var userName = userNameField.val();
 		var amount = amountField.val();
-		if (userName === "")
-		{
+		if (userName === "") {
 			alert("I'm sorry, we do not take anonymous donations");
 		}
-		else if (amount < 5)
-		{
+		else if (amount < 5) {
 			alert("We are insulted by your small contribution! Try again...");
 		}
 		else {
 			var donations = JSON.parse(localStorage.getItem("donations"));
-			if (donations === null)
-			{
+			if (donations === null) {
 				donations = {};
 			}
-			if (donations[projectName]==undefined)
-			{
+			if (donations[projectName]==undefined) {
 				donations[projectName] = [];
 			}
 			var newDonation = {'userName': userName, 'amount': amount};
@@ -150,8 +141,7 @@ function applyForGrant() {
 	$('#projectTable > tbody:last').append(newTableRow);
 	
 	var apps = JSON.parse(localStorage.getItem("applications"));
-	if (apps === null || apps === "null")
-	{
+	if (apps === null || apps === "null") {
 		apps = [];
 	}
 	
