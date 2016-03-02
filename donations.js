@@ -15,27 +15,23 @@ function loadDonations() {
 	console.log("Donations Json = " + donationsString);
 }
 
-
 function whoDonatedToProject(projectName)
 {
-	var donationsString = localStorage.getItem("donations");
-	donations = JSON.parse(donationsString);
-	if (donations != null) {
-		var donationsForProject = donations[projectName];
-		if (donationsForProject == undefined) {
-			alert("There are no donations for project '"+projectName+"'");
-		}
-		else {
-			var donationsForProject = donations[projectName];
-			var result = "Donations for project "+projectName+":\n";
-			for (dons of donationsForProject) {
-				result+=dons.userName+': $'+dons.amount+'\n';
-			}
-			alert(result);
-		}
+	var donationsForProject = getDonationsForProject(projectName);
+	if (donationsForProject === null)
+	{
+		alert ("The donations database is empty");
+	}
+	else if (donationsForProject == undefined) {
+		alert("There are no donations for project '"+projectName+"'");
 	}
 	else {
-		alert ("There's nothing in the donations database");
+		var donationsForProject = donations[projectName];
+		var result = "Donations for project " + projectName + ":\n";
+		for (dons of donationsForProject) {
+			result += dons.userName + ': $' + dons.amount + '\n';
+		}
+		alert(result);
 	}
 }
 
@@ -67,16 +63,9 @@ function donateToProject(projectName, donatePopup) {
 			alert("We are insulted by your small contribution! Try again...");
 		}
 		else {
-			var donations = JSON.parse(localStorage.getItem("donations"));
-			if (donations === null) {
-				donations = {};
-			}
-			if (donations[projectName]==undefined) {
-				donations[projectName] = [];
-			}
-			var newDonation = {'userName': userName, 'amount': amount};
-			donations[projectName].push(newDonation);
-			localStorage.setItem("donations", JSON.stringify(donations));
+			donateToProject(projectName, userName, amount);
+			var totalDonated = totalDonationsForProject(projectName);
+			$(this).closest('tr').find('#totalDonated').val(totalDonated);
 			alert("Dear "+userName+", your donation of $"+amount +" towards "+projectName+" has been registered\n And remember, no good deed goes unpunished!");
 			var donationsAfter = localStorage.getItem("donations");
 			console.log("donationsAfter =  "+donationsAfter);
@@ -108,15 +97,18 @@ function createDonatePopup() {
 	</div>');
 }
 
-function formApplicationTableRow(projectName, grantAmount, applicant) {
+function formApplicationTableRow(projectName, grantAmount, applicant, totalDonated) {
 	var newRow = $('<tr align="center">'
 		+tableCell(applicant)
 		+tableCell(projectName)
 		+tableCell(grantAmount)
+		+tableCell('<input type="text" id="totalDonated" value="0" align="right" readonly>')
 		+tableCell('<button id="donateButton" type="button">Donate to Project</button>')
 		+tableCell('<button id="whoDonatedButton" type="button">Who Donated</button>')
 		+'</tr>');
 	var donateButton = $(newRow).find('#donateButton');
+	var totalDonated = totalDonationsForProject(projectName);
+	$(newRow).find('#totalDonated').val(totalDonated);		
 
 	var donatePopup = createDonatePopup();
 	donatePopup.hide();
@@ -137,7 +129,8 @@ function applyForGrant() {
 	var grantProjectName = $('#GrantProjectName').val();
 	var grantApplicant = $('#GrantApplicant').val();
 	var projectJson = formApplicationString(grantProjectName, grantAmount, grantApplicant);
-	var newTableRow = formApplicationTableRow(grantProjectName, grantAmount, grantApplicant);
+
+	var newTableRow = formApplicationTableRow(grantProjectName, grantAmount, grantApplicant, 0);
 	$('#projectTable > tbody:last').append(newTableRow);
 	
 	var apps = JSON.parse(localStorage.getItem("applications"));
