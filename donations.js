@@ -1,3 +1,29 @@
+function formApplicationTableRow(projectName, grantAmount, applicant, totalDonated) {
+	var newRow = $('<tr align="center">'
+		+tableCell(applicant)
+		+tableCell(projectName)
+		+tableCell(grantAmount)
+		+tableCell(totalDonated, "totalDonated")
+		+tableCell('<button id="donateButton" type="button">Donate to Project</button>')
+		+tableCell('<button id="whoDonatedButton" type="button">Who Donated</button>')
+		+'</tr>');
+	var donateButton = $(newRow).find('#donateButton');
+	
+	var donatePopup = createDonatePopup();
+	donatePopup.hide();
+	donateButton.after(donatePopup);
+	donateButton.on('click', function () {
+		console.log("onclick for donateButton");
+		//$('#popupContact').hide(); //hide all the other open dialogs
+		donateToProject(projectName, donatePopup);
+	});
+	$(newRow).on('click', '#whoDonatedButton', function () {
+		whoDonatedToProject(projectName);
+	});
+	
+	return newRow;
+}
+
 function loadDonations() {
 	var apps = localStorage.getItem("applications");
 	console.log("Applications Json = " + apps);
@@ -6,7 +32,8 @@ function loadDonations() {
 	var appsArr = JSON.parse(apps);
 	if (appsArr != null) {
 		for (line of appsArr) {
-			var newRow = formApplicationTableRow(line.projectName, line.cost, line.userName);
+			var totalDonated = totalDonationsForProject(line.projectName);
+			var newRow = formApplicationTableRow(line.projectName, line.cost, line.userName, totalDonated);
 			$('#projectTable > tbody:last').append(newRow);
 		}
 	}
@@ -39,9 +66,11 @@ function formApplicationString(projectName, grantAmount, applicant) {
 	return '{"projectName":"'+projectName+'", "cost":'+grantAmount+', "userName": "'+applicant+ '"}';
 }
 
-function tableCell(content)
+function tableCell(content, idlabel)
 {
-	return '<td>'+content+'</td>';
+	if (idlabel === undefined)
+		return '<td>'+content+'</td>';
+	return '<td id="'+idlabel+'">'+content+'</td>';
 }
 
 function donateToProject(projectName, donatePopup) {
@@ -53,7 +82,9 @@ function donateToProject(projectName, donatePopup) {
 		amountField.val(0);
 		donatePopup.hide();
 	}
-	$(donatePopup).find('#SubmitButton').on('click', function() {
+	$(donatePopup).on('click', '#SubmitButton', function(event) {
+		event.stopPropagation();
+		console.log("onclick for SubmitButton");
 		var userName = userNameField.val();
 		var amount = amountField.val();
 		if (userName === "") {
@@ -63,16 +94,14 @@ function donateToProject(projectName, donatePopup) {
 			alert("We are insulted by your small contribution! Try again...");
 		}
 		else {
-			donateToProject(projectName, userName, amount);
+			registerDonationToProject(projectName, userName, amount);
 			var totalDonated = totalDonationsForProject(projectName);
-			$(this).closest('tr').find('#totalDonated').val(totalDonated);
+			$(this).closest('tr').find('#totalDonated').html(totalDonated);
 			alert("Dear "+userName+", your donation of $"+amount +" towards "+projectName+" has been registered\n And remember, no good deed goes unpunished!");
-			var donationsAfter = localStorage.getItem("donations");
-			console.log("donationsAfter =  "+donationsAfter);
 		}
 		clearAndHide();
 	});
-	$(donatePopup).find('#CancelButton').on('click', function() {
+	$(donatePopup).on('click', '#CancelButton', function() {
 		clearAndHide();
 	});
 }
@@ -95,33 +124,6 @@ function createDonatePopup() {
 		<button type="button" id="CancelButton" name="OK">Cancel</button> \
 		</form> \
 	</div>');
-}
-
-function formApplicationTableRow(projectName, grantAmount, applicant, totalDonated) {
-	var newRow = $('<tr align="center">'
-		+tableCell(applicant)
-		+tableCell(projectName)
-		+tableCell(grantAmount)
-		+tableCell('<input type="text" id="totalDonated" value="0" align="right" readonly>')
-		+tableCell('<button id="donateButton" type="button">Donate to Project</button>')
-		+tableCell('<button id="whoDonatedButton" type="button">Who Donated</button>')
-		+'</tr>');
-	var donateButton = $(newRow).find('#donateButton');
-	var totalDonated = totalDonationsForProject(projectName);
-	$(newRow).find('#totalDonated').val(totalDonated);		
-
-	var donatePopup = createDonatePopup();
-	donatePopup.hide();
-	donateButton.after(donatePopup);
-	donateButton.on('click', function () {
-		$('#popupContact').hide(); //hide all the other open dialogs
-		donateToProject(projectName, donatePopup);
-	});
-	$(newRow).find('#whoDonatedButton').on('click', function () {
-		whoDonatedToProject(projectName);
-	});
-	
-	return newRow;
 }
 
 function applyForGrant() {
@@ -159,6 +161,7 @@ function deleteProjects() {
 function deleteDonations() {
 	alert ('deleting only donations');
 	localStorage.setItem('donations', null);
+	loadDonations();
 }
 
 $(document).ready(

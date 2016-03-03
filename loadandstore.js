@@ -25,12 +25,12 @@ function totalDonationsForProject(projectName)
 	}
 	var total = 0;
 	for (dons of donationsForProject) {
-		total += parseInt(dons.amount);
+		total += +dons.amount;
 	}
 	return total;
 }
 
-function donateToProject(projectName, userName, amount) {
+function registerDonationToProject(projectName, userName, amount) {
 	var donations = JSON.parse(localStorage.getItem("donations"));
 	if (donations === null) {
 		donations = {};
